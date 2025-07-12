@@ -10,7 +10,7 @@ class WeatherService:
     """Service for fetching real-time weather data"""
     
     def __init__(self):
-        self.api_key = os.environ.get("54b20f78b55a38640f2b8a9673e3ddaf")
+        self.api_key = os.environ.get("OPENWEATHER_API_KEY")
         self.base_url = "https://api.openweathermap.org/data/2.5"
         
         # Major cities in Pakistan for weather monitoring
