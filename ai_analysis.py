@@ -4,8 +4,11 @@ import logging
 from datetime import datetime, timedelta
 from typing import Dict, List, Any
 from openai import OpenAI
+from dotenv import load_dotenv
 
+load_dotenv() 
 logger = logging.getLogger(__name__)
+
 
 class AIAnalyzer:
     """AI-powered health data analysis and recommendations"""
