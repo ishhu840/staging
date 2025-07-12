@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>National Public Health Status</title>
+    
+    <!-- External Libraries -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <i class="fas fa-shield-alt me-2"></i>
+                AI Health Crisis Response System
+                <span class="system-status">
+                    <i class="fas fa-circle pulse me-1"></i>
+                    Live System
+                </span>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#dashboard"><i class="fas fa-tachometer-alt me-1"></i>Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#health"><i class="fas fa-heartbeat me-1"></i>Health Monitor</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#climate"><i class="fas fa-cloud-sun me-1"></i>Climate Data</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#ai-analysis"><i class="fas fa-brain me-1"></i>AI Analysis</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#alerts"><i class="fas fa-exclamation-triangle me-1"></i>Alerts</a>
+                    </li>
+                    <li class="nav-item">
+                        <button class="btn btn-outline-light btn-sm" onclick="refreshData()">
+                            <i class="fas fa-sync-alt me-1"></i>Refresh
+                        </button>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid main-container">
+        <!-- System Overview Dashboard -->
+        <section id="dashboard">
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="dashboard-card">
+                        <div class="card-header">
+                            <i class="fas fa-globe me-2"></i>
+                            National Public Health Status 
+                            <div class="float-end">
+                                <span class="data-source-badge">IDSR</span>
+                                <span class="data-source-badge">WHO</span>
+                                <span class="data-source-badge">PMD</span>
+                                <span class="data-source-badge">AI Analysis</span>
+                                <span id="last-updated" class="text-light ms-2">
+                                    <i class="fas fa-clock me-1"></i>
+                                    Loading...
+                                </span>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-lg-3 col-md-6">
+                                    <div class="stat-card">
+                                        <div class="stat-value text-danger" id="malaria-cases">
+                                            <i class="loading-spinner"></i>
+                                        </div>
+                                        <div class="stat-label">Active Malaria Cases</div>
+                                        <div class="mt-2" id="malaria-trend">
+                                            <i class="fas fa-arrow-up trend-up me-1"></i>
+                                            <small>Loading...</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-lg-3 col-md-6">
+                                    <div class="stat-card">
+                                        <div class="stat-value text-warning" id="dengue-cases">
+                                            <i class="loading-spinner"></i>
+                                        </div>
+                                        <div class="stat-label">Dengue Cases (YTD)</div>
+                                        <div class="mt-2" id="dengue-trend">
+                                            <i class="fas fa-arrow-down trend-down me-1"></i>
+                                            <small>Loading...</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-lg-3 col-md-6">
+                                    <div class="stat-card">
+                                        <div class="stat-value text-info" id="respiratory-cases">
+                                            <i class="loading-spinner"></i>
+                                        </div>
+                                        <div class="stat-label">Respiratory Infections</div>
+                                        <div class="mt-2" id="respiratory-trend">
+                                            <i class="fas fa-minus trend-stable me-1"></i>
+                                            <small>Loading...</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-lg-3 col-md-6">
+                                    <div class="stat-card">
+                                        <div class="stat-value text-success" id="vaccination-coverage">
+                                            <i class="loading-spinner"></i>
+                                        </div>
+                                        <div class="stat-label">Vaccination Coverage</div>
+                                        <div class="mt-2" id="vaccination-trend">
+                                            <i class="fas fa-arrow-up trend-up me-1"></i>
+                                            <small>Loading...</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts and Visualizations -->
+            <div class="row">
+                <div class="col-lg-8">
+                    <div class="dashboard-card">
+                        <div class="card-header">
+                            <i class="fas fa-chart-line me-2"></i>
+                            Disease Trends (Past 30 Days)
+                        </div>
+                        <div class="card-body">
+                            <div class="chart-container">
+                                <canvas id="diseaseChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-4">
+                    <div class="dashboard-card">
+                        <div class="card-header">
+                            <i class="fas fa-map-marker-alt me-2"></i>
+                            Disease Distribution Map
+                        </div>
+                        <div class="card-body">
+                            <div id="diseaseMap" class="map-container"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Weather and Climate Data -->
+        <section id="climate" class="mt-4">
+            <div class="row">
+                <div class="col-lg-6">
+                    <div class="dashboard-card">
+                        <div class="card-header">
+                            <i class="fas fa-cloud-sun me-2"></i>
+                            Current Weather Conditions
+                        </div>
+                        <div class="card-body">
+                            <div id="weather-widget" class="weather-widget">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <h4 id="weather-temp">Loading...</h4>
+                                        <p id="weather-description">Loading weather data...</p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <p><strong>Humidity:</strong> <span id="weather-humidity">-</span>%</p>
+                                        <p><strong>Wind Speed:</strong> <span id="weather-wind">-</span> m/s</p>
+                                        <p><strong>Pressure:</strong> <span id="weather-pressure">-</span> hPa</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="dashboard-card">
+                        <div class="card-header">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            Climate Health Alerts
+                        </div>
+                        <div class="card-body">
+                            <div id="climate-alerts">
+                                <div class="alert-item">
+                                    <i class="fas fa-spinner fa-spin me-2"></i>
+                                    Loading climate alerts...
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- AI Analysis and Recommendations -->
+        <section id="ai-analysis" class="mt-4">
+            <div class="row">
+                <div class="col-lg-6">
+                    <div class="dashboard-card">
+                        <div class="card-header">
+                            <i class="fas fa-brain me-2"></i>
+                            AI-Powered Recommendations
+                        </div>
+                        <div class="card-body">
+                            <div id="ai-recommendations">
+                                <div class="recommendation-item">
+                                    <i class="fas fa-spinner fa-spin me-2"></i>
+                                    Generating AI recommendations...
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="dashboard-card">
+                        <div class="card-header">
+                            <i class="fas fa-chart-area me-2"></i>
+                            Scenario Simulations
+                        </div>
+                        <div class="card-body">
+                            <div id="scenario-simulations">
+                                <div class="scenario-card">
+                                    <i class="fas fa-spinner fa-spin me-2"></i>
+                                    Running scenario simulations...
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Alerts and Monitoring -->
+        <section id="alerts" class="mt-4">
+            <div class="row">
+                <div class="col-12">
+                    <div class="dashboard-card">
+                        <div class="card-header">
+                            <i class="fas fa-bell me-2"></i>
+                            Active Health Alerts
+                        </div>
+                        <div class="card-body">
+                            <div id="health-alerts">
+                                <div class="alert-item">
+                                    <i class="fas fa-spinner fa-spin me-2"></i>
+                                    Loading health alerts...
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Disease Surveillance & Health Monitoring -->
+        <section id="health" class="mt-4">
+            <div class="row">
+                <div class="col-lg-6">
+                    <div class="dashboard-card">
+                        <div class="card-header">
+                            <i class="fas fa-microscope me-2"></i>
+                            Disease Surveillance & Health Monitoring
+                        </div>
+                        <div class="card-body">
+                            <div id="disease-surveillance">
+                                <div class="text-center">
+                                    <i class="fas fa-spinner fa-spin me-2"></i>
+                                    Loading surveillance data...
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="dashboard-card">
+                        <div class="card-header">
+                            <i class="fas fa-map-marker-alt me-2"></i>
+                            Top 5 High-Risk Areas
+                        </div>
+                        <div class="card-body">
+                            <div id="high-risk-areas">
+                                <div class="text-center">
+                                    <i class="fas fa-spinner fa-spin me-2"></i>
+                                    Identifying high-risk areas...
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Climate & Environmental Health Monitoring -->
+        <section class="mt-4">
+            <div class="row">
+                <div class="col-12">
+                    <div class="dashboard-card">
+                        <div class="card-header">
+                            <i class="fas fa-thermometer-half me-2"></i>
+                            Climate & Environmental Health Monitoring
+                        </div>
+                        <div class="card-body">
+                            <div id="climate-monitoring">
+                                <div class="text-center">
+                                    <i class="fas fa-spinner fa-spin me-2"></i>
+                                    Loading climate monitoring data...
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Educational Footer -->
+    <footer class="footer bg-dark text-white mt-5 py-4">
+        <div class="container">
+            <div class="text-center">
+                <div class="row">
+                    <div class="col-12 mb-3">
+                        <h6 class="text-warning">📢 Educational Research Project</h6>
+                    </div>
+                    <div class="col-md-6 col-lg-3 mb-2">
+                        <p class="mb-1 small"><strong>📢 This analysis is for educational purposes only.</strong></p>
+                    </div>
+                    <div class="col-md-6 col-lg-3 mb-2">
+                        <p class="mb-1 small"><strong>🏫 Supervised by:</strong> Dr. Valerie Odon, University of Strathclyde, UK</p>
+                    </div>
+                    <div class="col-md-6 col-lg-3 mb-2">
+                        <p class="mb-1 small"><strong>💻 Developed by:</strong> Odon's Lab, PhD Students</p>
+                    </div>
+                    <div class="col-md-6 col-lg-3 mb-2">
+                        <p class="mb-1 small"><strong>📌 Note:</strong> All data and resources used are publicly available.</p>
+                    </div>
+                </div>
+                <hr class="my-2 bg-light">
+                <div class="row">
+                    <div class="col-12">
+                        <p class="text-light small mb-0">
+                            <strong>Data Sources:</strong> Integrated Disease Surveillance & Response (IDSR), WHO, Pakistan Meteorological Department, AI Analysis
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="/static/js/dashboard.js"></script>
+</body>
+</html>

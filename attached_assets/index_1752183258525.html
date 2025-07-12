@@ -1,0 +1,1364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>National Public Health Status</title>
+    
+    <!-- External Libraries -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary-color: #1e3a5f;
+            --secondary-color: #00a651;
+            --accent-color: #f39c12;
+            --danger-color: #e74c3c;
+            --warning-color: #f39c12;
+            --success-color: #27ae60;
+            --info-color: #3498db;
+            --dark-color: #2c3e50;
+            --light-gray: #ecf0f1;
+            --pakistan-green: #00a651;
+            --pakistan-white: #ffffff;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .navbar {
+            background: linear-gradient(90deg, var(--primary-color) 0%, var(--pakistan-green) 100%);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 1rem 0;
+        }
+
+        .navbar-brand {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: white !important;
+        }
+
+        .navbar-nav .nav-link {
+            color: rgba(255,255,255,0.9) !important;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .navbar-nav .nav-link:hover {
+            color: white !important;
+            transform: translateY(-1px);
+        }
+
+        .main-container {
+            padding: 2rem 0;
+        }
+
+        .dashboard-card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            border: none;
+        }
+
+        .dashboard-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 35px rgba(0,0,0,0.15);
+        }
+
+        .card-header {
+            background: linear-gradient(90deg, var(--primary-color) 0%, var(--pakistan-green) 100%);
+            color: white;
+            padding: 1.5rem;
+            border: none;
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .card-body {
+            padding: 2rem;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            margin-bottom: 1rem;
+            transition: all 0.3s ease;
+            border-left: 4px solid var(--primary-color);
+        }
+
+        .stat-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+        }
+
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            color: #6c757d;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .alert-item {
+            background: white;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 0.5rem;
+            border-left: 4px solid var(--danger-color);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .alert-high { border-left-color: var(--danger-color); }
+        .alert-medium { border-left-color: var(--warning-color); }
+        .alert-low { border-left-color: var(--info-color); }
+
+        .chart-container {
+            position: relative;
+            height: 350px;
+            margin: 1rem 0;
+        }
+
+        .map-container {
+            height: 400px;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .btn-primary {
+            background: linear-gradient(90deg, var(--primary-color) 0%, var(--pakistan-green) 100%);
+            border: none;
+            border-radius: 8px;
+            padding: 0.75rem 1.5rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+
+        .scenario-card {
+            background: white;
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 3px 12px rgba(0,0,0,0.1);
+            border-left: 4px solid var(--info-color);
+        }
+
+        .progress-custom {
+            height: 8px;
+            border-radius: 4px;
+            background-color: #e9ecef;
+        }
+
+        .progress-bar-custom {
+            border-radius: 4px;
+            transition: width 0.6s ease;
+        }
+
+        .recommendation-item {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 0.5rem;
+            border-left: 3px solid var(--success-color);
+        }
+
+        .tab-content {
+            padding: 2rem 0;
+        }
+
+        .nav-tabs .nav-link {
+            border: none;
+            border-radius: 8px 8px 0 0;
+            margin-right: 0.5rem;
+            background: #f8f9fa;
+            color: #6c757d;
+            font-weight: 500;
+        }
+
+        .nav-tabs .nav-link.active {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .weather-widget {
+            background: linear-gradient(135deg, #74b9ff 0%, #0984e3 100%);
+            color: white;
+            border-radius: 10px;
+            padding: 1.5rem;
+            text-align: center;
+        }
+
+        .disease-trend {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem;
+            background: #f8f9fa;
+            border-radius: 6px;
+            margin-bottom: 0.5rem;
+        }
+
+        .trend-up { color: var(--danger-color); }
+        .trend-down { color: var(--success-color); }
+        .trend-stable { color: var(--info-color); }
+
+        .resource-bar {
+            background: #e9ecef;
+            height: 20px;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 0.5rem 0;
+        }
+
+        .resource-fill {
+            height: 100%;
+            border-radius: 10px;
+            transition: width 0.6s ease;
+        }
+
+        .footer {
+            background: var(--dark-color);
+            color: white;
+            padding: 2rem 0;
+            margin-top: 3rem;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        @media (max-width: 768px) {
+            .stat-value {
+                font-size: 2rem;
+            }
+            
+            .card-body {
+                padding: 1rem;
+            }
+            
+            .chart-container {
+                height: 250px;
+            }
+            
+            .map-container {
+                height: 300px;
+            }
+        }
+
+        .ministry-logo {
+            height: 40px;
+            margin-right: 10px;
+        }
+
+        .system-status {
+            display: inline-flex;
+            align-items: center;
+            background: var(--success-color);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            margin-left: 1rem;
+        }
+
+        .data-source-badge {
+            background: var(--info-color);
+            color: white;
+            padding: 0.25rem 0.5rem;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            margin: 0.25rem;
+            display: inline-block;
+        }
+    </style>
+</head>
+<body>
+    
+
+
+
+
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <i class="fas fa-shield-alt me-2"></i>
+                AI Health Crisis Response System
+                <span class="system-status">
+                    <i class="fas fa-circle pulse me-1"></i>
+                    Live System
+                </span>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#dashboard"><i class="fas fa-tachometer-alt me-1"></i>Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#health"><i class="fas fa-heartbeat me-1"></i>Health Monitor</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#climate"><i class="fas fa-cloud-sun me-1"></i>Climate Data</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#ai-analysis"><i class="fas fa-brain me-1"></i>AI Analysis</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#alerts"><i class="fas fa-exclamation-triangle me-1"></i>Alerts</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid main-container">
+        <!-- System Overview Dashboard -->
+        <section id="dashboard">
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="dashboard-card">
+                        <div class="card-header">
+                            <i class="fas fa-globe me-2"></i>
+                            National Public Health Status 
+                            <div class="float-end">
+                                <span class="data-source-badge">IDSR</span>
+                                <span class="data-source-badge">WHO</span>
+                                <span class="data-source-badge">PMD</span>
+                                <span class="data-source-badge">AI Analysis</span>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-lg-3 col-md-6">
+                                    <div class="stat-card">
+                                        <div class="stat-value text-danger">24,056</div>
+                                        <div class="stat-label">Active Malaria Cases</div>
+                                        <div class="mt-2">
+                                            <i class="fas fa-arrow-up trend-up me-1"></i>
+                                            <small>+27% from last month</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-lg-3 col-md-6">
+                                    <div class="stat-card">
+                                        <div class="stat-value text-warning">1,247</div>
+                                        <div class="stat-label">Dengue Cases (YTD)</div>
+                                        <div class="mt-2">
+                                            <i class="fas fa-arrow-down trend-down me-1"></i>
+                                            <small>-15% seasonal decline</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-lg-3 col-md-6">
+                                    <div class="stat-card">
+                                        <div class="stat-value text-info">82%</div>
+                                        <div class="stat-label">IDSR Compliance</div>
+                                        <div class="mt-2">
+                                            <i class="fas fa-arrow-up trend-up me-1"></i>
+                                            <small>+5% improvement</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-lg-3 col-md-6">
+                                    <div class="stat-card">
+                                        <div class="stat-value text-success">94</div>
+                                        <div class="stat-label">AI Accuracy %</div>
+                                        <div class="mt-2">
+                                            <i class="fas fa-brain me-1"></i>
+                                            <small>CNN Model Active</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Real-time Geographic Map -->
+            <div class="row mb-4">
+                <div class="col-lg-8">
+                    <div class="dashboard-card">
+                        <div class="card-header">
+                            <i class="fas fa-map-marked-alt me-2"></i>
+                            Real-time Disease Distribution Map - Pakistan
+                        </div>
+                        <div class="card-body">
+                            <div id="pakistanMap" class="map-container"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-4">
+                    <div class="dashboard-card">
+                        <div class="card-header">
+                            <i class="fas fa-exclamation-circle me-2"></i>
+                            High Priority Alerts
+                        </div>
+                        <div class="card-body">
+                            <div class="alert-item alert-high">
+                                <div class="d-flex justify-content-between">
+                                    <strong>Dengue Outbreak - Rawalpindi</strong>
+                                    <span class="badge bg-danger">Critical</span>
+                                </div>
+                                <small class="text-muted">15 new cases in last 24h</small>
+                                <div class="mt-2">
+                                    <button class="btn btn-sm btn-outline-danger">View Details</button>
+                                </div>
+                            </div>
+                            <div class="alert-item alert-medium">
+                                <div class="d-flex justify-content-between">
+                                    <strong>Malaria Surge - Sindh</strong>
+                                    <span class="badge bg-warning">High</span>
+                                </div>
+                                <small class="text-muted">55K cases reported this week</small>
+                                <div class="mt-2">
+                                    <button class="btn btn-sm btn-outline-warning">View Details</button>
+                                </div>
+                            </div>
+                            <div class="alert-item alert-low">
+                                <div class="d-flex justify-content-between">
+                                    <strong>ILI Monitoring - KP</strong>
+                                    <span class="badge bg-info">Monitor</span>
+                                </div>
+                                <small class="text-muted">Seasonal pattern detected</small>
+                                <div class="mt-2">
+                                    <button class="btn btn-sm btn-outline-info">View Details</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Health Monitoring Module -->
+        <section id="health">
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="dashboard-card">
+                        <div class="card-header">
+                            <i class="fas fa-heartbeat me-2"></i>
+                            Disease Surveillance & Health Monitoring
+                        </div>
+                        <div class="card-body">
+                            <ul class="nav nav-tabs" id="healthTabs">
+                                <li class="nav-item">
+                                    <a class="nav-link active" href="#vectorborne" data-bs-toggle="tab">Vector-Borne Diseases</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" href="#respiratory" data-bs-toggle="tab">Respiratory Illnesses</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" href="#waterborne" data-bs-toggle="tab">Water-Borne Diseases</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" href="#trends" data-bs-toggle="tab">Trend Analysis</a>
+                                </li>
+                            </ul>
+                            
+                            <div class="tab-content">
+                                <div class="tab-pane fade show active" id="vectorborne">
+                                    <div class="row">
+                                        <div class="col-lg-8">
+                                            <div class="chart-container">
+                                                <canvas id="vectorChart"></canvas>
+                                            </div>
+                                        </div>
+                                        <div class="col-lg-4">
+                                            <h6>Disease Trends</h6>
+                                            <div class="disease-trend">
+                                                <span>Dengue Fever</span>
+                                                <span class="trend-down">
+                                                    <i class="fas fa-arrow-down"></i> -15%
+                                                </span>
+                                            </div>
+                                            <div class="disease-trend">
+                                                <span>Malaria</span>
+                                                <span class="trend-up">
+                                                    <i class="fas fa-arrow-up"></i> +27%
+                                                </span>
+                                            </div>
+                                            <div class="disease-trend">
+                                                <span>Chikungunya</span>
+                                                <span class="trend-stable">
+                                                    <i class="fas fa-minus"></i> Stable
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="tab-pane fade" id="respiratory">
+                                    <div class="chart-container">
+                                        <canvas id="respiratoryChart"></canvas>
+                                    </div>
+                                </div>
+                                
+                                <div class="tab-pane fade" id="waterborne">
+                                    <div class="chart-container">
+                                        <canvas id="waterbornechart"></canvas>
+                                    </div>
+                                </div>
+                                
+                                <div class="tab-pane fade" id="trends">
+                                    <div class="chart-container">
+                                        <canvas id="trendsChart"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Climate Data Integration -->
+        <section id="climate">
+            <div class="row mb-4">
+                <div class="col-lg-8">
+                    <div class="dashboard-card">
+                        <div class="card-header">
+                            <i class="fas fa-cloud-sun me-2"></i>
+                            Climate & Environmental Health Monitoring
+                        </div>
+                        <div class="card-body">
+                            <div class="chart-container">
+                                <canvas id="climateChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-4">
+                    <div class="dashboard-card">
+                        <div class="card-header">
+                            <i class="fas fa-thermometer-half me-2"></i>
+                            Current Weather Conditions
+                        </div>
+                        <div class="card-body">
+                            <div class="weather-widget mb-3">
+                                <h4>Lahore, Punjab</h4>
+                                <div class="fs-1">28°C</div>
+                                <p>Partly Cloudy</p>
+                                <div class="row text-center">
+                                    <div class="col-4">
+                                        <small>Humidity</small>
+                                        <br><strong>65%</strong>
+                                    </div>
+                                    <div class="col-4">
+                                        <small>Wind</small>
+                                        <br><strong>12 km/h</strong>
+                                    </div>
+                                    <div class="col-4">
+                                        <small>Pressure</small>
+                                        <br><strong>1013 mb</strong>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <h6>Vector Breeding Risk Factors</h6>
+                            <div class="mb-2">
+                                <div class="d-flex justify-content-between">
+                                    <span>Standing Water Risk</span>
+                                    <span class="text-warning">High</span>
+                                </div>
+                                <div class="progress-custom">
+                                    <div class="progress-bar-custom bg-warning" style="width: 75%;"></div>
+                                </div>
+                            </div>
+                            <div class="mb-2">
+                                <div class="d-flex justify-content-between">
+                                    <span>Temperature Risk</span>
+                                    <span class="text-danger">Critical</span>
+                                </div>
+                                <div class="progress-custom">
+                                    <div class="progress-bar-custom bg-danger" style="width: 85%;"></div>
+                                </div>
+                            </div>
+                            <div class="mb-2">
+                                <div class="d-flex justify-content-between">
+                                    <span>Humidity Risk</span>
+                                    <span class="text-info">Moderate</span>
+                                </div>
+                                <div class="progress-custom">
+                                    <div class="progress-bar-custom bg-info" style="width: 65%;"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- AI Analysis & Scenario Simulation -->
+        <section id="ai-analysis">
+            <div class="row mb-4">
+                <div class="col-lg-6">
+                    <div class="dashboard-card">
+                        <div class="card-header">
+                            <i class="fas fa-brain me-2"></i>
+                            AI-Powered Scenario Simulation
+                        </div>
+                        <div class="card-body">
+                            <div class="scenario-card">
+                                <h6><i class="fas fa-play-circle me-2"></i>Dengue Outbreak Scenario - Next 30 Days</h6>
+                                <p class="text-muted">AI Prediction based on current trends, climate data, and population density</p>
+                                <div class="row">
+                                    <div class="col-6">
+                                        <strong>Predicted Cases:</strong> 1,890 ± 240
+                                    </div>
+                                    <div class="col-6">
+                                        <strong>Confidence Level:</strong> 87%
+                                    </div>
+                                </div>
+                                <div class="mt-3">
+                                    <div class="d-flex justify-content-between">
+                                        <span>Risk Level</span>
+                                        <span class="text-danger">High Risk</span>
+                                    </div>
+                                    <div class="progress-custom">
+                                        <div class="progress-bar-custom bg-danger" style="width: 80%;"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="scenario-card">
+                                <h6><i class="fas fa-play-circle me-2"></i>Malaria Control Impact Simulation</h6>
+                                <p class="text-muted">Intervention effectiveness modeling</p>
+                                <div class="row">
+                                    <div class="col-6">
+                                        <strong>With Intervention:</strong> -35% cases
+                                    </div>
+                                    <div class="col-6">
+                                        <strong>Without Action:</strong> +45% cases
+                                    </div>
+                                </div>
+                                <div class="mt-3">
+                                    <button class="btn btn-primary btn-sm">Run Detailed Simulation</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-lg-6">
+                    <div class="dashboard-card">
+                        <div class="card-header">
+                            <i class="fas fa-lightbulb me-2"></i>
+                            AI-Generated Crisis Response Recommendations
+                        </div>
+                        <div class="card-body">
+                            <h6>Immediate Actions Required:</h6>
+                            <div class="recommendation-item">
+                                <div class="d-flex justify-content-between">
+                                    <strong>Deploy Vector Control Teams</strong>
+                                    <span class="badge bg-danger">Priority 1</span>
+                                </div>
+                                <p class="mb-1">Focus on Rawalpindi district - 5 teams needed</p>
+                                <small class="text-muted">Estimated impact: 40% case reduction</small>
+                            </div>
+                            
+                            <div class="recommendation-item">
+                                <div class="d-flex justify-content-between">
+                                    <strong>Increase Laboratory Capacity</strong>
+                                    <span class="badge bg-warning">Priority 2</span>
+                                </div>
+                                <p class="mb-1">Add 200 daily test capacity in Sindh</p>
+                                <small class="text-muted">Current backlog: 1,200 samples</small>
+                            </div>
+                            
+                            <div class="recommendation-item">
+                                <div class="d-flex justify-content-between">
+                                    <strong>Public Awareness Campaign</strong>
+                                    <span class="badge bg-info">Priority 3</span>
+                                </div>
+                                <p class="mb-1">Launch mosquito breeding site elimination drive</p>
+                                <small class="text-muted">Target: 2M households in Punjab</small>
+                            </div>
+                            
+                            <h6 class="mt-4">Resource Allocation Optimization:</h6>
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between">
+                                    <span>Medical Supplies</span>
+                                    <span>78% Utilization</span>
+                                </div>
+                                <div class="resource-bar">
+                                    <div class="resource-fill bg-success" style="width: 78%;"></div>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between">
+                                    <span>Healthcare Workers</span>
+                                    <span>92% Deployed</span>
+                                </div>
+                                <div class="resource-bar">
+                                    <div class="resource-fill bg-warning" style="width: 92%;"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Population Analytics -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="dashboard-card">
+                    <div class="card-header">
+                        <i class="fas fa-users me-2"></i>
+                        Population Health Analytics & Demographics
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-lg-8">
+                                <div class="chart-container">
+                                    <canvas id="populationChart"></canvas>
+                                </div>
+                            </div>
+                            <div class="col-lg-4">
+                                <h6>Demographic Risk Factors</h6>
+                                <div class="stat-card">
+                                    <div class="stat-value">2.4M</div>
+                                    <div class="stat-label">High-Risk Population</div>
+                                    <small class="text-muted">Children under 5 & Adults 65+</small>
+                                </div>
+                                <div class="stat-card">
+                                    <div class="stat-value">68%</div>
+                                    <div class="stat-label">Urban Population</div>
+                                    <small class="text-muted">Higher vector density risk</small>
+                                </div>
+                                <div class="stat-card">
+                                    <div class="stat-value">45%</div>
+                                    <div class="stat-label">Access to Clean Water</div>
+                                    <small class="text-muted">Affects waterborne disease risk</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Predictive Modeling Dashboard -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="dashboard-card">
+                    <div class="card-header">
+                        <i class="fas fa-chart-line me-2"></i>
+                        Predictive Disease Outbreak Modeling
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-lg-9">
+                                <div class="chart-container">
+                                    <canvas id="predictionChart"></canvas>
+                                </div>
+                            </div>
+                            <div class="col-lg-3">
+                                <h6>Model Performance</h6>
+                                <div class="mb-3">
+                                    <strong>Dengue Model</strong>
+                                    <div class="progress-custom mt-1">
+                                        <div class="progress-bar-custom bg-success" style="width: 94%;"></div>
+                                    </div>
+                                    <small class="text-muted">94% Accuracy</small>
+                                </div>
+                                <div class="mb-3">
+                                    <strong>Malaria Model</strong>
+                                    <div class="progress-custom mt-1">
+                                        <div class="progress-bar-custom bg-success" style="width: 91%;"></div>
+                                    </div>
+                                    <small class="text-muted">91% Accuracy</small>
+                                </div>
+                                <div class="mb-3">
+                                    <strong>ILI Model</strong>
+                                    <div class="progress-custom mt-1">
+                                        <div class="progress-bar-custom bg-warning" style="width: 87%;"></div>
+                                    </div>
+                                    <small class="text-muted">87% Accuracy</small>
+                                </div>
+                                
+                                <h6 class="mt-4">Next Update</h6>
+                                <p class="text-muted">
+                                    <i class="fas fa-clock me-1"></i>
+                                    Model refresh in 2 hours
+                                </p>
+                                <div class="loading-spinner me-2"></div>
+                                <small>Processing new data...</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stakeholder Reports -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="dashboard-card">
+                    <div class="card-header">
+                        <i class="fas fa-file-alt me-2"></i>
+                        Stakeholder Reports & Export Tools
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-lg-4">
+                                <h6>Quick Reports</h6>
+                                <div class="d-grid gap-2">
+                                    <button class="btn btn-outline-primary" onclick="generateReport('weekly')">
+                                        <i class="fas fa-calendar-week me-2"></i>Weekly Summary
+                                    </button>
+                                    <button class="btn btn-outline-primary" onclick="generateReport('outbreak')">
+                                        <i class="fas fa-exclamation-triangle me-2"></i>Outbreak Report
+                                    </button>
+                                    <button class="btn btn-outline-primary" onclick="generateReport('prediction')">
+                                        <i class="fas fa-crystal-ball me-2"></i>Prediction Analysis
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="col-lg-4">
+                                <h6>Data Export</h6>
+                                <div class="d-grid gap-2">
+                                    <button class="btn btn-outline-success" onclick="exportData('excel')">
+                                        <i class="fas fa-file-excel me-2"></i>Export to Excel
+                                    </button>
+                                    <button class="btn btn-outline-success" onclick="exportData('pdf')">
+                                        <i class="fas fa-file-pdf me-2"></i>Export to PDF
+                                    </button>
+                                    <button class="btn btn-outline-success" onclick="exportData('csv')">
+                                        <i class="fas fa-file-csv me-2"></i>Export to CSV
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="col-lg-4">
+                                <h6>Recent Downloads</h6>
+                                <div class="list-group list-group-flush">
+                                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                                        <span>Weekly_Report_W12_2025.pdf</span>
+                                        <small class="text-muted">2h ago</small>
+                                    </div>
+                                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                                        <span>Dengue_Analysis_Punjab.xlsx</span>
+                                        <small class="text-muted">5h ago</small>
+                                    </div>
+                                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                                        <span>Malaria_Data_Sindh.csv</span>
+                                        <small class="text-muted">1d ago</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-6">
+                    <h5>AI-Based Public Health & Crisis Response System</h5>
+                </div>
+                <div class="col-lg-6 text-end">
+                    <p><strong>System Status:</strong> <span class="text-success">Operational</span></p>
+                    <p><strong>Last Updated:</strong> <span id="lastUpdate"></span></p>
+                    <p><strong>Data Sources:</strong> IDSR, WHO, PMD, Provincial Health Departments</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- External Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <script>
+        // Initialize system when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeSystem();
+            updateLastUpdatedTime();
+            setInterval(updateRealTimeData, 30000); // Update every 30 seconds
+        });
+
+        function initializeSystem() {
+            initializeMap();
+            initializeCharts();
+            simulateRealTimeUpdates();
+        }
+
+        // Map Initialization
+        function initializeMap() {
+            const map = L.map('pakistanMap').setView([30.3753, 69.3451], 6);
+            
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors'
+            }).addTo(map);
+
+            // Add disease outbreak markers
+            const outbreaks = [
+                {lat: 33.6844, lng: 73.0479, city: 'Rawalpindi', disease: 'Dengue', cases: 156, severity: 'high'},
+                {lat: 31.5204, lng: 74.3587, city: 'Lahore', disease: 'Dengue', cases: 89, severity: 'medium'},
+                {lat: 24.8607, lng: 67.0011, city: 'Karachi', disease: 'Malaria', cases: 2340, severity: 'high'},
+                {lat: 34.0151, lng: 71.5249, city: 'Peshawar', disease: 'ILI', cases: 245, severity: 'low'},
+                {lat: 30.1798, lng: 71.4924, city: 'Multan', disease: 'Malaria', cases: 567, severity: 'medium'}
+            ];
+
+            outbreaks.forEach(outbreak => {
+                const color = outbreak.severity === 'high' ? 'red' : 
+                             outbreak.severity === 'medium' ? 'orange' : 'blue';
+                
+                const marker = L.circleMarker([outbreak.lat, outbreak.lng], {
+                    color: color,
+                    fillColor: color,
+                    fillOpacity: 0.7,
+                    radius: Math.min(outbreak.cases / 50, 20) + 5
+                }).addTo(map);
+
+                marker.bindPopup(`
+                    <strong>${outbreak.city}</strong><br>
+                    Disease: ${outbreak.disease}<br>
+                    Cases: ${outbreak.cases}<br>
+                    Severity: ${outbreak.severity.toUpperCase()}
+                `);
+            });
+        }
+
+        // Chart Initialization
+        function initializeCharts() {
+            // Vector-borne diseases chart
+            const vectorCtx = document.getElementById('vectorChart').getContext('2d');
+            new Chart(vectorCtx, {
+                type: 'line',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                    datasets: [{
+                        label: 'Dengue Cases',
+                        data: [234, 189, 156, 298, 567, 890, 1200, 1456, 1123, 789, 456, 234],
+                        borderColor: '#e74c3c',
+                        backgroundColor: 'rgba(231, 76, 60, 0.1)',
+                        tension: 0.4
+                    }, {
+                        label: 'Malaria Cases',
+                        data: [5670, 6123, 5890, 6456, 7890, 8234, 9123, 8567, 7234, 6789, 6123, 5567],
+                        borderColor: '#3498db',
+                        backgroundColor: 'rgba(52, 152, 219, 0.1)',
+                        tension: 0.4
+                    }, {
+                        label: 'Chikungunya Cases',
+                        data: [12, 23, 34, 45, 67, 89, 123, 145, 134, 123, 89, 67],
+                        borderColor: '#f39c12',
+                        backgroundColor: 'rgba(243, 156, 18, 0.1)',
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    // maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Vector-Borne Disease Trends - 2025'
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+
+            // Respiratory diseases chart
+            const respiratoryCtx = document.getElementById('respiratoryChart').getContext('2d');
+            new Chart(respiratoryCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['ILI', 'ALRI', 'Pneumonia', 'Bronchitis', 'Asthma'],
+                    datasets: [{
+                        label: 'Cases This Month',
+                        data: [12456, 8934, 5678, 3456, 2345],
+                        backgroundColor: [
+                            'rgba(74, 144, 226, 0.8)',
+                            'rgba(80, 200, 120, 0.8)',
+                            'rgba(255, 159, 64, 0.8)',
+                            'rgba(255, 99, 132, 0.8)',
+                            'rgba(153, 102, 255, 0.8)'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    // maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Respiratory Disease Cases - Current Month'
+                        }
+                    }
+                }
+            });
+
+            // Water-borne diseases chart
+            const waterborneCtx = document.getElementById('waterbornechart').getContext('2d');
+            new Chart(waterborneCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Acute Diarrhea', 'Cholera', 'Typhoid', 'Hepatitis A', 'Dysentery'],
+                    datasets: [{
+                        data: [15674, 234, 567, 890, 456],
+                        backgroundColor: [
+                            '#3498db',
+                            '#e74c3c',
+                            '#f39c12',
+                            '#27ae60',
+                            '#9b59b6'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    // maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Water-Borne Disease Distribution'
+                        }
+                    }
+                }
+            });
+
+            // Climate chart
+            const climateCtx = document.getElementById('climateChart').getContext('2d');
+            new Chart(climateCtx, {
+                type: 'line',
+                data: {
+                    labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4', 'Week 5', 'Week 6'],
+                    datasets: [{
+                        label: 'Temperature (°C)',
+                        data: [28, 32, 35, 31, 29, 33],
+                        borderColor: '#e74c3c',
+                        backgroundColor: 'rgba(231, 76, 60, 0.1)',
+                        yAxisID: 'y'
+                    }, {
+                        label: 'Humidity (%)',
+                        data: [65, 72, 68, 75, 70, 73],
+                        borderColor: '#3498db',
+                        backgroundColor: 'rgba(52, 152, 219, 0.1)',
+                        yAxisID: 'y1'
+                    }, {
+                        label: 'Rainfall (mm)',
+                        data: [12, 5, 8, 15, 20, 7],
+                        borderColor: '#27ae60',
+                        backgroundColor: 'rgba(39, 174, 96, 0.1)',
+                        yAxisID: 'y'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    // maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Climate Factors Affecting Disease Transmission'
+                        }
+                    },
+                    scales: {
+                        y: {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                        },
+                        y1: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            grid: {
+                                drawOnChartArea: false,
+                            },
+                        }
+                    }
+                }
+            });
+
+            // Population chart
+            const populationCtx = document.getElementById('populationChart').getContext('2d');
+            new Chart(populationCtx, {
+                type: 'radar',
+                data: {
+                    labels: ['Punjab', 'Sindh', 'KPK', 'Balochistan', 'AJK', 'GB'],
+                    datasets: [{
+                        label: 'Disease Burden Index',
+                        data: [85, 78, 65, 45, 42, 38],
+                        borderColor: '#e74c3c',
+                        backgroundColor: 'rgba(231, 76, 60, 0.2)'
+                    }, {
+                        label: 'Healthcare Capacity',
+                        data: [90, 85, 70, 50, 55, 48],
+                        borderColor: '#27ae60',
+                        backgroundColor: 'rgba(39, 174, 96, 0.2)'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    // maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Provincial Health Profile Comparison'
+                        }
+                    }
+                }
+            });
+
+            // Prediction chart
+            const predictionCtx = document.getElementById('predictionChart').getContext('2d');
+            new Chart(predictionCtx, {
+                type: 'line',
+                data: {
+                    labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4', 'Week 5', 'Week 6', 'Week 7', 'Week 8'],
+                    datasets: [{
+                        label: 'Actual Cases',
+                        data: [234, 289, 356, 423, 467, 512, null, null],
+                        borderColor: '#3498db',
+                        backgroundColor: 'rgba(52, 152, 219, 0.1)',
+                        borderDash: []
+                    }, {
+                        label: 'AI Prediction',
+                        data: [null, null, null, null, null, 512, 578, 645],
+                        borderColor: '#e74c3c',
+                        backgroundColor: 'rgba(231, 76, 60, 0.1)',
+                        borderDash: [5, 5]
+                    }, {
+                        label: 'Confidence Interval',
+                        data: [null, null, null, null, null, 490, 540, 600],
+                        borderColor: '#95a5a6',
+                        backgroundColor: 'rgba(149, 165, 166, 0.1)',
+                        borderDash: [2, 2],
+                        fill: '+1'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    // maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'AI-Powered Disease Outbreak Prediction'
+                        }
+                    }
+                }
+            });
+
+            // Trends chart
+            const trendsCtx = document.getElementById('trendsChart').getContext('2d');
+            new Chart(trendsCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                    datasets: [{
+                        label: 'Deaths',
+                        data: [12, 19, 3, 5, 2, 3],
+                        backgroundColor: 'rgba(231, 76, 60, 0.8)'
+                    }, {
+                        label: 'Hospitalizations',
+                        data: [234, 456, 234, 345, 123, 234],
+                        backgroundColor: 'rgba(243, 156, 18, 0.8)'
+                    }, {
+                        label: 'Recoveries',
+                        data: [1234, 1567, 1890, 2123, 1876, 1645],
+                        backgroundColor: 'rgba(39, 174, 96, 0.8)'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    // maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Health Outcomes Trend Analysis'
+                        }
+                    }
+                }
+            });
+        }
+
+        // Real-time data simulation
+        function simulateRealTimeUpdates() {
+            setInterval(() => {
+                // Update statistics with random variations
+                updateStatCards();
+                // Update weather data
+                updateWeatherData();
+            }, 10000); // Update every 10 seconds
+        }
+
+        function updateStatCards() {
+            const statValues = document.querySelectorAll('.stat-value');
+            statValues.forEach(stat => {
+                if (stat.textContent.includes(',')) {
+                    const currentValue = parseInt(stat.textContent.replace(/,/g, ''));
+                    const variation = Math.floor(Math.random() * 20) - 10; // ±10 variation
+                    const newValue = Math.max(0, currentValue + variation);
+                    stat.textContent = newValue.toLocaleString();
+                }
+            });
+        }
+
+        function updateWeatherData() {
+            const tempElement = document.querySelector('.weather-widget .fs-1');
+            if (tempElement) {
+                const currentTemp = parseInt(tempElement.textContent);
+                const newTemp = currentTemp + (Math.random() * 4 - 2); // ±2 degree variation
+                tempElement.textContent = Math.round(newTemp) + '°C';
+            }
+        }
+
+        function updateRealTimeData() {
+            // Simulate real-time data updates
+            console.log('Updating real-time data...');
+            updateLastUpdatedTime();
+        }
+
+        function updateLastUpdatedTime() {
+            const now = new Date();
+            document.getElementById('lastUpdate').textContent = now.toLocaleString();
+        }
+
+        // Report generation functions
+        function generateReport(type) {
+            const reports = {
+                'weekly': 'Weekly Health Summary Report',
+                'outbreak': 'Disease Outbreak Analysis Report',
+                'prediction': 'AI Prediction & Forecast Report'
+            };
+            
+            alert(`Generating ${reports[type]}...\nThis would normally download a comprehensive PDF report with current data and analysis.`);
+        }
+
+        function exportData(format) {
+            const formats = {
+                'excel': 'Excel Workbook (.xlsx)',
+                'pdf': 'PDF Document (.pdf)',
+                'csv': 'CSV Data File (.csv)'
+            };
+            
+            alert(`Exporting data as ${formats[format]}...\nThis would normally download the current dataset in the selected format.`);
+        }
+
+        // Smooth scrolling for navigation links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Add notification system
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+            notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+            notification.innerHTML = `
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.remove();
+            }, 5000);
+        }
+
+        // Simulate periodic alerts
+        setInterval(() => {
+            const alerts = [
+                { message: 'New dengue cases detected in Lahore district', type: 'warning' },
+                { message: 'AI model updated with latest data', type: 'success' },
+                { message: 'Weather conditions favorable for vector breeding', type: 'info' },
+                { message: 'Resource allocation optimization completed', type: 'success' }
+            ];
+            
+            const randomAlert = alerts[Math.floor(Math.random() * alerts.length)];
+            showNotification(randomAlert.message, randomAlert.type);
+        }, 45000); // Show alert every 45 seconds
+
+        // Initialize tooltips
+        const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+    </script>
+    <footer class="footer">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-12 text-center">
+                    <p class="mb-2">📢 This analysis is for educational purposes only.</p>
+                    <p class="mb-2">🏫 Supervised by: Dr. Valerie Odon, University of Strathclyde, UK</p>
+                    <p class="mb-2">💻 Developed by: Odon’s Lab, PhD Students</p>
+                    <p class="mb-0">📌 Note: All data and resources used are publicly available.</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,30 @@
+.
+├── .DS_Store
+├── .env
+├── ai_analysis.py
+├── app.py
+├── attached_assets
+│   ├── index_1752183258525.html
+│   └── Weekly_Report-21-2025 _1752183263239.xlsx
+├── data
+│   ├── health_data.xlsx
+│   └── process_excel.py
+├── data_processor.py
+├── LOCAL_SETUP.md
+├── main.py
+├── project_structure.txt
+├── pyproject.toml
+├── replit.md
+├── requirements.txt
+├── scheduler.py
+├── static
+│   ├── css
+│   │   └── style.css
+│   └── js
+│       └── dashboard.js
+├── templates
+│   └── index.html
+├── uv.lock
+└── weather_service.py
+
+7 directories, 21 files
