@@ -5,6 +5,9 @@ from datetime import datetime
 from typing import Dict, Any, Optional
 
 logger = logging.getLogger(__name__)
+from dotenv import load_dotenv
+
+load_dotenv() 
 
 class WeatherService:
     """Service for fetching real-time weather data"""
